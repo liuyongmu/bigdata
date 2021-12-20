@@ -119,26 +119,81 @@ hive
 
 ### 数据类型与存储格式
 
-~~~mathematica
-数据类型    描述
-BOOLEAN	   true/false   
-TINYINT	   1字节的有符号整数，表示范围: -128~127
-SMALLINT   2个字节的有符号整数，表示范围: -32768~32767
-INT	       4个字节的带符号整数，表示范围: -2147483648~2147483647
-BIGINT	   8字节带符号整数，表示范围: -2^64~2^64-1
-FLOAT	   4字节单精度浮点数
-DOUBLE	   8字节双精度浮点数
-DEICIMAL   任意精度的带符号小数
-STRING	   字符串
-VARCHAR	   变长字符串
-CHAR	   固定长度字符串
-BINARY	   字节数组
-TIMESTAMP  时间戳
-DATE	   日期
-ARRAY	   数组类型
-MAP	       key-value,key必须为原始类型，value可以任意类型	map(‘a’,1,’b’,2)
-STRUCT	   段集合,类型可以不同
-~~~
+##### 数据类型
+
+`BOOLEAN`	   true/false  
+`TINYINT`	   1字节的有符号整数，表示范围: -128~127
+`SMALLINT`    2个字节的有符号整数，表示范围: -32768~32767
+`INT`	            4个字节的带符号整数，表示范围: -2147483648~2147483647
+`BIGINT`	     8字节带符号整数，表示范围: -2^64~2^64-1
+`FLOAT`	       4字节单精度浮点数
+`DOUBLE`	     8字节双精度浮点数
+`DEICIMAL`    任意精度的带符号小数
+`STRING`	     字符串
+`VARCHAR`	   变长字符串
+`CHAR`	          固定长度字符串
+`BINARY`	      字节数组
+`TIMESTAMP`  时间戳
+`DATE`	          日期
+`ARRAY`	        数组类型
+`MAP`	            key-value，key必须为原始类型，value可以任意类型
+`STRUCT`	     段集合，类型可以不同
+
+##### 存储格式
+
+**textfile**：，行式存储，纯文本文件存储格式，不压缩，也是hive的默认存储格式，磁盘开销大，数据解析开销大
+
+**sequencefile**：二进制行式存储，会压缩，不能使用load方式加载数据
+
+**parquet**：二进制列式存储，会压缩，不能使用load方式加载数据
+
+**orc**：二进制列式存储，会压缩，不能load。查询性能高
+
+##### 常用压缩格式
+
+| 压缩    | 压缩比 | 压缩速度 | 需要安装 | 编码器                                     | 是否可切分       |
+| ------- | ------ | -------- | -------- | ------------------------------------------ | ---------------- |
+| DEFAULT | 无     | 无       | 否       | org.apache.hadoop.io.compress.DefaultCodec | 否               |
+| Gzip    | 很高   | 比较快   | 否       | org.apache.hadoop.io.compress.GzipCodec    | 否               |
+| bzip2   | 最高   | 慢       | 否       | org.apache.hadoop.io.compress.BZip2Codec   | 是               |
+| LZO     | 比较高 | 很快     | 是       | com.hadoop.compression.lzo.LzopCodec       | 是(需要建立索引) |
+| Snappy  | 比较高 | 很快     | 是       | org.apache.hadoop.io.compress.SnappyCodec  | 否               |
+
+### 表类型
+
+**内部表**：表目录会创建在`hive-site.xml`中的`{hive.metastore.warehouse.dir}`目录下，数据也会存储到该目录下，删除内部表后数据也同样删除，默认创建的表就是内部表
+
+**外部表**：外部表需要使用关键字`external`，外部表会根据创建表时`LOCATION`指定的路径来创建目录，删除外部表后，表对应的数据不会被删除
+
+**分区表**：Hive在做数据查询时，会扫描整个表内容，随着数据量的加大，全表扫描会消耗更多的时间，而某些情况业务只需要查询某些特定的数据，所以Hive在建表的时候引入了partiiton的概念。即在建表时，将整个表存储在不同的子目录中，每一个子目录对应一个分区，在查询时，可以指定分区查询，避免全表扫描，从而提高查询效率
+
+**分桶表**：桶表就是对指定列进行哈希(hash)计算，然后会根据 hash 值进行切分数据，将具有不同 hash 值的数据写到每个桶对应的文件中。Hive分桶的原理与MapReduce中的HashPartitioner的原理一模一样，使用分桶字段的hash值对分桶的数量进行取模(取余)。针对某一列进行分桶存储。每一条记录都是通过分桶字段的值的hash对分桶个数取余，然后确定放入哪个桶
+
+### Hive函数
+
+
+
+### 数据库操作
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
