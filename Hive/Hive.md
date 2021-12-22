@@ -1,10 +1,10 @@
 # Hive
 
-Hive 是建立在[Hadoop](https://hadoop.apache.org/) 上的数据仓库基础构架，可以将结构化的数据文件映射成一张数据表，实现了对大量数据的轻度汇总、查询和分析功能。Hive 定义了简单的类SQL 查询语言，简称为HQL，用户可以使用HQL进行数据读写以及计算。同时，HQL可以集成自己的功能来进行自定义分析，例如 User Defined Functions (UDF)。  
+Hive 是建立在[Hadoop](https：//hadoop.apache.org/) 上的数据仓库基础构架，可以将结构化的数据文件映射成一张数据表，实现了对大量数据的轻度汇总、查询和分析功能。Hive 定义了简单的类SQL 查询语言，简称为HQL，用户可以使用HQL进行数据读写以及计算。同时，HQL可以集成自己的功能来进行自定义分析，例如 User Defined Functions (UDF)。  
 
 ### Hive的架构
 
-<img src="Hive.assets/image-20211219103128049.png" alt="image-20211219103128049" style="zoom:70%;" />
+<img src="Hive.assets/image-20211219103128049.png" alt="image-20211219103128049" style="zoom：70%;" />
 
 **用户连接接口**：Shell/CLI是指Shell命令，JDBC/ODBC是指Hive的java实现，Web接口是指可通过浏览器访问Hive
 
@@ -16,7 +16,7 @@ Hive 是建立在[Hadoop](https://hadoop.apache.org/) 上的数据仓库基础�
 
 ### 本地模式安装
 
-安装Hive之前先安装Hadoop、Java和MySQL(使用MySQL保存元数据)，在Hive官网[下载](http://archive.apache.org/dist/hive/)需要的Hive安装包
+安装Hive之前先安装Hadoop、Java和MySQL(使用MySQL保存元数据)，在Hive官网[下载](http：//archive.apache.org/dist/hive/)需要的Hive安装包
 
 上传安装包到服务器，此处选择安装到/usr/local下，将安装包解压到指定目录
 
@@ -62,7 +62,7 @@ export HADOOP_HOME=/usr/local/hadoop
 export HIVE_AUX_JARS_PATH=/usr/local/hive/lib
 ~~~
 
-配置hive-site.xml：在hive/conf目录下复制出一个hive-site.xml文件。把hive-site.xml 中所有包含`${system:java.io.tmpdir}`替换成`/usr/local/hive/iotmp.`，如果系统默认没有指定系统用户名,那么要把配置`${system:user.name}`替换成当前用户名`root`，并且修改如下的四个配置。
+配置hive-site.xml：在hive/conf目录下复制出一个hive-site.xml文件。把hive-site.xml 中所有包含`${system：java.io.tmpdir}`替换成`/usr/local/hive/iotmp.`，如果系统默认没有指定系统用户名,那么要把配置`${system：user.name}`替换成当前用户名`root`，并且修改如下的四个配置。
 
 > 需要降低MySQL密码策略机制，改为low。hive的元数据在mysql库里创建的数据库hive的编码最好设置成latin1
 
@@ -121,23 +121,23 @@ hive
 
 ##### 数据类型
 
-`BOOLEAN`	   true/false  
-`TINYINT`	   1字节的有符号整数，表示范围: -128~127
-`SMALLINT`    2个字节的有符号整数，表示范围: -32768~32767
-`INT`	            4个字节的带符号整数，表示范围: -2147483648~2147483647
-`BIGINT`	     8字节带符号整数，表示范围: -2^64~2^64-1
-`FLOAT`	       4字节单精度浮点数
-`DOUBLE`	     8字节双精度浮点数
-`DEICIMAL`    任意精度的带符号小数
-`STRING`	     字符串
-`VARCHAR`	   变长字符串
-`CHAR`	          固定长度字符串
-`BINARY`	      字节数组
-`TIMESTAMP`  时间戳
-`DATE`	          日期
-`ARRAY`	        数组类型
-`MAP`	            key-value，key必须为原始类型，value可以任意类型
-`STRUCT`	     段集合，类型可以不同
+`BOOLEAN`：true/false  								 	`TINYINT`：1字节的有符号整数，表示范围： -128~127
+
+`STRING`：字符串										   	`SMALLINT`：2个字节的有符号整数，表示范围： -32768~32767
+
+`VARCHAR`：变长字符串									`INT`：4个字节的带符号整数，表示范围： -2147483648~2147483647
+
+`CHAR`：固定长度字符串					         	`BIGINT`：8字节带符号整数，表示范围： -2^64~2^64-1
+
+`BINARY`：字节数组									    	`FLOAT`：4字节单精度浮点数
+
+`TIMESTAMP` ：时间戳								 		`DOUBLE`：8字节双精度浮点数
+
+`DATE`：日期									 		          	`DEICIMAL`：任意精度的带符号小数
+
+`ARRAY`：数组类型									       	`MAP`：key-value，key必须为原始类型，value可以任意类型
+
+`STRUCT`：段集合，类型可以不同
 
 ##### 存储格式
 
@@ -171,9 +171,167 @@ hive
 
 ### Hive函数
 
+##### 一、关系运算
 
+1. 等值比较： **`=`**           2. 不等值比较：**`<>`**              3. 小于比较： `<`                        4. 小于等于比较：**`<=`**
+
+5. 大于比较：**`>`**           6. 大于等于比较：**`>=`**           7. 空值判断：**`IS NULL`**           8. 非空判断：**`IS NOT NULL`**
+
+9. LIKE比较：**`LIKE`**              10. JAVA的LIKE操作： **`RLIKE`**              11. REGEXP操作：**`REGEXP`**
+
+##### 二、数学运算
+
+1. 加法操作： **`+`**                 2. 减法操作： **`-`**                        3. 乘法操作： **`*`**                       4. 除法操作： **`/`**
+
+5. 取余操作： **`%`**               6. 位与操作： **`&`**                       7. 位或操作： **`|`**                        8. 位异或操作： **`^`**
+
+9. 位取反操作： **`~`**
+
+##### 三、逻辑运算
+
+1. 逻辑与操作： **`AND` **                2. 逻辑或操作：**`OR`**                3. 逻辑非操作： **`NOT`**
+
+##### 四、数值计算
+
+1. 取整函数： **`round`**                      2. 指定精度取整函数： **`round`**                3. 向下取整函数： **`floor`**
+
+4. 向上取整函数： **`ceil`**                5. 向上取整函数： **`ceiling`**                    6. 取随机数函数： **`rand`**
+
+7. 自然指数函数： **`exp`**                  8. 以10为底对数函数： **`log10`**                 9. 以2为底对数函数： **`log2`**
+
+10. 对数函数： **`log`**                          11. 幂运算函数： **`pow`**                              12. 幂运算函数： **`power`**
+
+13. 开平方函数： **`sqrt`**                    14. 二进制函数： **`bin`**                              15. 十六进制函数： **`hex`**
+
+16. 反转十六进制函数： **`unhex`**      17. 进制转换函数： **`conv`**                        18. 绝对值函数： **`abs`**
+
+19. 正取余函数： **`pmod`**                    20. 正弦函数： **`sin`**                                  21. 反正弦函数： **`asin`**
+
+22. 余弦函数： **`cos`**                          23. 反余弦函数： **`acos`**                            24. positive函数： **`positive`**
+
+25. negative函数： **`negative`**
+
+##### 五、日期函数
+
+1. UNIX时间戳转日期函数： **`from_unixtime`**              2. 获取当前UNIX时间戳函数： **`unix_timestamp`**
+
+3. 日期转UNIX时间戳函数： **`unix_timestamp`**            4. 指定格式日期转UNIX时间戳函数： **`unix_timestamp`**
+
+5. 日期时间转日期函数： **`to_date`**                                6. 日期转年函数： **`year`**
+
+7. 日期转月函数： **`month`**                                                8. 日期转天函数： **`day`**
+
+9. 日期转小时函数： **`hour`**                                              10. 日期转分钟函数： **`minute`**
+
+11. 日期转秒函数： **`second`**                                              12. 日期转周函数： **`weekofyear`**
+
+13. 日期比较函数： **`datediff`**                                          14. 日期增加函数： **`date_add`**
+
+15. 日期减少函数： **`date_sub`**
+
+##### 六、条件函数
+
+1. If函数： **`if`**                                  2. 非空查找函数： **`COALESCE`**                                  3. 条件判断函数：**`CASE`**
+
+##### 七、字符串函数
+
+1. 长度：**`length`**                                  2. 反转：**`reverse`**                                  3. 连接：**`concat`**
+
+4. 带分隔符连接：**`concat_ws`**           5. 截取：**`substr,substring`**                   6. 转大写：**`upper,ucase`**
+
+7. 转小写：**`lower,lcase`**                      8. 去空格：**`trim`**                                    9. 左边去空格：**`ltrim`**
+
+10. 右边去空格：**`rtrim`**                        11. 正则表达式替换：**`regexp_replace`**
+
+12. 正则表达式解析：**`regexp_extract`**                                                               13. URL解析：**`parse_url`**
+
+14. json解析：**`get_json_object`**           15. 空格字符串：**`space`**                       16. 重复字符串：**`repeat`**
+
+17. 首字符ascii：**`ascii`**                          18. 左补足：**`lpad`**                                  19. 右补足：**`rpad`**
+
+20. 分割字符串： **`split`**                         21. 集合查找： **`find_in_set`**
+
+##### 八、集合统计函数
+
+1. 个数统计函数： **`count`**                  2. 总和统计函数： **`sum`**                     3. 平均值统计函数： **`avg`**
+
+4. 最小值统计函数： **`min`**                 5. 最大值统计函数： **`max`**                  6. 非空集合总体变量函数： **`var_pop`**
+
+7. 非空集合样本变量函数： **`var_samp`**                                                           8. 总体标准偏离函数： **`stddev_pop`**
+
+9. 样本标准偏离函数： **`stddev_samp`**                                                           10．中位数函数： **`percentile`**
+
+11. 中位数函数： **`percentile`**                                                            12. 近似中位数函数： **`percentile_approx`**
+
+13. 近似中位数函数： **`percentile_approx`**                                     14. 直方图： **`histogram_numeric`**
+
+##### 九、复杂类型访问操作
+
+1. array类型访问： `A[n]`                         2. map类型访问： `M[key]`                         3. struct类型访问： `S.x`
+
+##### 十、复杂类型长度统计函数
+
+1. Map类型长度函数： `size(Map)`         2. array类型长度函数： `size(Array)`         3. 类型转换函数：`cast`
 
 ### 数据库操作
+
+查看数据库
+
+~~~sql
+SHOW DATABASES;
+~~~
+
+使用数据库
+
+~~~sql
+USE databasesname;
+~~~
+
+创建数据库
+
+~~~sql
+-- 创建的数据库位于hive配置文件指定路径下
+CREATE DATABASE IF NOT EXISTS databasesname;
+
+-- 创建数据库并指定位置
+CREATE DATABASE databasesname location '/user/myhive';
+~~~
+
+查看数据库描述信息
+
+~~~sql
+-- 查看数据库描述信息
+DESC DATABASE databasename;
+
+-- 查看数据库更多描述信息
+DESC DATABASE EXTENDED databasename;
+~~~
+
+修改数据库
+
+~~~sql
+ALTER DATABASE databasename SET dbpropertits('createtime'='20211212');
+~~~
+
+删除数据库
+
+~~~sql
+DROP DATABASE databasename;
+~~~
+
+##### 数据表操作
+
+创建表
+
+~~~sql
+CREATE TABLE IF NOT EXISTS tablename(
+    uid String COMMENT 'uuid',
+    class String COMMENT '班级',
+    name String COMMENT '姓名',
+    score int COMMENT '分数'
+) COMMENT '学生成绩表'
+PARTITION BY ()
+~~~
 
 
 
