@@ -132,9 +132,13 @@ class Solution {
     }
 
     private int getIndex(char c) {
-        if ("start".equals(state)) return 0;
-        if ("signed".equals(state)) return 1;
-        if ("digit".equals(state)) return 2;
+        if (c == ' ') {
+            return 0;
+        } else if (c == '-' || c == '+') {
+            return 1;
+        } else if (Character.isDigit(c)) {
+            return 2;
+        }
         return 3;
     }
 }
