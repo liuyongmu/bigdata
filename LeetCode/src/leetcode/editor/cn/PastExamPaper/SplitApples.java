@@ -7,6 +7,12 @@ package leetcode.editor.cn.PastExamPaper;
 * */
 
 public class SplitApples {
+    /**
+     * 暴力递归
+     * @param apples 苹果数
+     * @param plates 盘子数
+     * @return 摆放方式数量
+     */
     public static int ways(int apples, int plates) {
         // 如果没有苹果，那就是一种摆放方式
         if (apples <= 0) {
@@ -29,7 +35,56 @@ public class SplitApples {
         return a + b;
     }
 
+    /**
+     * 动态规划，直接根据暴力递归变更
+     * @param apples 苹果数
+     * @param plates 盘子数
+     * @return 可以摆放的方式数
+     */
+    public static int dpWays(int apples, int plates) {
+        if (apples <= 0) {
+            return 1;
+        }
+        if (plates <= 0) {
+            return 0;
+        }
+        int[][] dp = new int[apples + 1][plates + 1];
+        // 初始条件，苹果数为0时，盘子数不管多少结果都是1，盘子数为0时苹果数不管多少结果都是0，
+        // 不过数组初始化默认值就是0，可以不用手动添加条件
+        for (int i = 0; i <= plates; i++) {
+            dp[0][i] = 1;
+        }
+        for (int i = 1; i <= apples; i++) {
+            for (int j = 1; j <= plates; j++) {
+                if (j > i) {
+                    // 盘子数大于苹果数时结果都是和盘子数等于苹果数时一样的
+                    dp[i][j] = dp[i][i];
+                } else {
+                    // 苹果数大于盘子数时分两种情况
+                    // 第一种情况时使用全部盘子，第二种情况时不使用全部盘子，两种情况的结果相加
+                    dp[i][j] = dp[i - j][j] + dp[i][j - 1];
+                }
+            }
+        }
+        return dp[apples][plates];
+    }
+
     public static void main(String[] args) {
-        System.out.println(ways(5, 4));
+        boolean succeed = true;
+        int testTime = 100;
+        for (int i = 0; i < testTime; i++) {
+            int apples = (int) (Math.random() * 100);
+            int plates = (int) (Math.random() * 100);
+            int ans1 = ways(apples, plates);
+            int ans2 = dpWays(apples, plates);
+            if (ans1 != ans2) {
+                succeed = false;
+                System.out.println("ans1: " + ans1);
+                System.out.println("ans2: " + ans2);
+                System.out.println("apples: " + apples + ", " + "plates: " + plates);
+                break;
+            }
+        }
+        System.out.println(succeed ? "Nice!" : "Fucking fucked");
     }
 }
