@@ -1,11 +1,12 @@
 package leetcode.editor.cn.PastExamPaper;
 
 /*
-* 给一个数组，找出数组中出现的水王数，如果没有水王数则返回-1。数组中的数字大小在-104~104之间
+* 给一个数组，找出数组中出现的水王数，如果没有水王数则返回-1。数组中的数字大小在0~99之间
 * 水王数的定义为数组中出现次数大于数组长度一半以上的数
 * 限制时间复杂度O(n)，空间复杂度O(1)
 * */
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,7 +23,7 @@ public class TheKingOfWaterNumber {
             map.put(x, map.getOrDefault(x, 0) + 1);
         }
         for (int key : map.keySet()) {
-            if (map.get(key) > nums.length >> 2) {
+            if (map.get(key) > nums.length >> 1) {
                 return key;
             }
         }
@@ -43,20 +44,22 @@ public class TheKingOfWaterNumber {
         if (nums == null || nums.length == 0) {
             return -1;
         }
-        // 初始化候选和血条
         int candidate = Integer.MAX_VALUE;
         int lifeBar = 0;
         for (int x : nums) {
-            if (candidate == Integer.MAX_VALUE) {  // 如果候选为空，则当前数赋值给候选，血条加一
+            if (candidate == Integer.MAX_VALUE) {
                 candidate = x;
-                lifeBar++;
-            } else if (candidate != x) {  // 候选不为空且当前数不等于候选，血条减一
+                lifeBar = 1;
+            } else if (candidate != x) {
                 lifeBar--;
-            } else {  // 候选不为空且当前数等于候选，血条加一
+                if (lifeBar == 0) {  // 如果血条等于0了，要把候选设成初始值
+                    candidate = Integer.MAX_VALUE;
+                }
+            } else {
                 lifeBar++;
             }
         }
-        if (lifeBar == 0) {  // 看一下是否有数没有被删除
+        if (lifeBar == 0) {  // 如果数都被删除完了，说明没有水王数
             return -1;
         }
         int cnt = 0;  // 最后遍历一边验证候选是否是水王数
@@ -66,5 +69,39 @@ public class TheKingOfWaterNumber {
             }
         }
         return cnt > (nums.length >> 1) ? candidate : -1;
+    }
+
+    /**
+     * 生成随机数组
+     */
+    public static int[] generateRandomArray() {
+        int n = (int)(Math.random() * 100) + 1;
+        int[] arr = new int[n];
+        int num = (int)(Math.random() * 100);
+        for (int i = 0; i < n; i++) {
+            if ((int)(Math.random() * 10) % 2 == 0) {
+                arr[i] = num;
+            } else {
+                arr[i] = (int)(Math.random() * 100);
+            }
+        }
+        return arr;
+    }
+
+    public static void main(String[] args) {
+        boolean succeed = true;
+        for (int i = 0; i < 100000; i++) {
+            int[] nums = generateRandomArray();
+            int ans1 = verify(nums);
+            int ans2 = waterKing(nums);
+            if (ans1 != ans2) {
+                succeed = false;
+                System.out.println("ans1: " + ans1);
+                System.out.println("ans2: " + ans2);
+                System.out.println(Arrays.toString(nums));
+                break;
+            }
+        }
+        System.out.println(succeed ? "Nice!" : "Fucking fucked");
     }
 }
