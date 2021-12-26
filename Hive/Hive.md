@@ -319,66 +319,184 @@ ALTER DATABASE databasename SET dbpropertits('createtime'='20211212');
 DROP DATABASE databasename;
 ~~~
 
-##### 数据表操作
+### 数据表操作
 
 创建表
 
 ~~~sql
-CREATE TABLE IF NOT EXISTS tablename(
-    uid String COMMENT 'uuid',
-    class String COMMENT '班级',
-    name String COMMENT '姓名',
-    score int COMMENT '分数'
-) COMMENT '学生成绩表'
-PARTITION BY ()
+-- 创建分区表
+create table if not exists tablename(
+    uid String comment '用户id',
+    page String comment '页面',
+    load_dt String comment '时间',
+    active_duration int comment '时长'
+) comment '用户流览表'
+partition by (String inc_day)
+row format delimited fields terminated by '\001'
+stroed as orc tblproperties('orc.compress'='SNAPPY');
+
+-- 创建外部表
+create external table if not exists tablename(
+    uid String comment 'uuid',
+    info Map<String, String> comment '信息'
+)
+row format delimited fields terminated by '\001'
+map keys terminated by ':'
+location 'user/myhive/user_info';
 ~~~
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+查看所有表
 
 ~~~sql
-select
-    user_id,
-    scope
-from
-(
-    select
-        user_id,
-        scope,
-        row_number() over(partition by user_id order by total desc, n desc) as rk
-    from 
-    (
-        select
-            user_id,
-            scope,
-            case scope when '0-1' then 1 when '2-5' then 3 when '5-10' then 4
-                       when '1-2' then 2 when '10-20' then 5 else 6 end as n,
-            sum(total) as total
-        from t1
-        group by user_id, scope
-    ) b
-) a
-where rk = 1;
+show tables;
+
+-- 模糊查询表
+show tables like "ods";
 ~~~
+
+查看表信息
+
+~~~sql
+-- 查看表结构信息
+desc tablename;
+
+-- 查看详细表结构信息
+desc formatted tablename;
+
+-- 查看更详细表结构信息
+desc extended tablename;
+~~~
+
+查看表的创建语句
+
+~~~sql
+show create table tablename;
+~~~
+
+查看表分区
+
+~~~sql
+show partitions tablename;
+~~~
+
+修改表信息
+
+~~~sql
+alter table tablename set tblproperties('parquet.compress'='LZO');
+~~~
+
+加载数据，只能是textfile类型的表才可以
+
+~~~sql
+load data [local] inpath '/root/data/test.txt' [overwrite] into table tablename [partition];
+~~~
+
+### hive小文件处理
+
+1、使用 hive 自带的 concatenate 命令，自动合并小文件，可以执行多次，该命令只支持RCFILE和ORC类型的表
+
+```sql
+-- 非分区表
+alter table tablename concatenate;
+
+-- 分区表
+alter table tablename partition(inc_day='20211224') concatenate;
+```
+
+2、调整参数减少Map数量
+
+- 设置map输入合并小文件的相关参数
+
+  ~~~sql
+  -- 执行Map前进行小文件合并，CombineHiveInputFormat底层是 Hadoop的 CombineFileInputFormat 方法，此方法是在mapper中将多个文件合成一个split作为输入
+  set hive.input.format=org.apache.hadoop.hive.ql.io.CombineHiveInputFormat; -- 默认
+  
+  -- 每个Map最大输入大小(这个值决定了合并后文件的数量)
+  set mapred.max.split.size=256000000;   -- 256M
+  
+  -- 一个节点上split的至少的大小(这个值决定了多个DataNode上的文件是否需要合并)
+  set mapred.min.split.size.per.node=100000000;  -- 100M
+  
+  -- 一个交换机下split的至少的大小(这个值决定了多个交换机上的文件是否需要合并)
+  set mapred.min.split.size.per.rack=100000000;  -- 100M
+  ~~~
+
+- 设置map输出和reduce输出进行合并的相关参数
+
+  ~~~sql
+  -- 设置map端输出进行合并，默认为true
+  set hive.merge.mapfiles = true;
+  
+  -- 设置reduce端输出进行合并，默认为false
+  set hive.merge.mapredfiles = true;
+  
+  -- 设置合并文件的大小
+  set hive.merge.size.per.task = 256*1000*1000;   -- 256M
+  
+  -- 当输出文件的平均大小小于该值时，启动一个独立的MapReduce任务进行文件merge
+  set hive.merge.smallfiles.avgsize=16000000;   -- 16M 
+  ~~~
+
+- 启用压缩
+
+  ~~~sql
+  -- hive的查询结果输出是否进行压缩
+  set hive.exec.compress.output=true;
+  
+  -- MapReduce Job的结果输出是否使用压缩
+  set mapreduce.output.fileoutputformat.compress=true;
+  ~~~
+
+3、减少Reduce的数量
+
+~~~sql
+-- reduce 的个数决定了输出的文件的个数，所以可以调整reduce的个数控制hive表的文件数量，hive中的分区函数 distribute by 正好是控制MR中partition分区的，然后通过设置reduce的数量，结合分区函数让数据均衡的进入每个reduce即可。
+
+-- 设置reduce的数量有两种方式，第一种是直接设置reduce个数
+set mapreduce.job.reduces=10;
+
+-- 第二种是设置每个reduce的大小，Hive会根据数据总大小猜测确定一个reduce个数
+set hive.exec.reducers.bytes.per.reducer=5120000000; -- 默认是1G，设置为5G
+
+-- 执行以下语句，将数据均衡的分配到reduce中
+set mapreduce.job.reduces=10;
+insert overwrite table A partition(dt)
+select * from B
+distribute by rand();
+
+-- 解释：如设置reduce数量为10，则使用 rand()， 随机生成一个数 x % 10 ，这样数据就会随机进入 reduce 中，防止出现有的文件过大或过小
+~~~
+
+4、使用hadoop的archive将小文件归档
+
+Hadoop Archive简称HAR，是一个高效地将小文件放入HDFS块中的文件存档工具，它能够将多个小文件打包成一个HAR文件，这样在减少namenode内存使用的同时，仍然允许对文件进行透明的访问
+
+```sql
+-- 用来控制归档是否可用
+set hive.archive.enabled=true;
+
+-- 通知Hive在创建归档时是否可以设置父目录
+set hive.archive.har.parentdir.settable=true;
+
+-- 控制需要归档文件的大小
+set har.partfile.size=1099511627776;
+
+-- 使用以下命令进行归档
+ALTER TABLE A ARCHIVE PARTITION(dt='2020-12-24', hr='12');
+
+-- 对已归档的分区恢复为原文件
+ALTER TABLE A UNARCHIVE PARTITION(dt='2020-12-24', hr='12');
+```
+
+> 注意:  归档的分区可以查看不能 insert overwrite，必须先 unarchive
+
+5、如果是因为插入引起的小文件，可以重查询插入
+
+~~~sql
+insert overwite table tablename select * from tablename;
+~~~
+
+
 
 
 
